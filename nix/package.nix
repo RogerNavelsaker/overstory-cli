@@ -1,4 +1,4 @@
-{ bun2nix, lib, makeWrapper, symlinkJoin }:
+{ bash, bun, bun2nix, lib, makeWrapper, symlinkJoin }:
 
 let
   manifest = builtins.fromJSON (builtins.readFile ./package-manifest.json);
@@ -92,7 +92,12 @@ symlinkJoin {
   postBuild = ''
     rm -rf "$out/bin"
     mkdir -p "$out/bin"
-    makeWrapper "${basePackage}/bin/${manifest.package.repo}" "$out/bin/${manifest.binary.name}"
+    entrypoint="$(find "${basePackage}/share/${manifest.package.repo}/node_modules" -path "*/node_modules/${manifest.package.npmName}/${manifest.binary.entrypoint}" | head -n 1)"
+    cat > "$out/bin/${manifest.binary.name}" <<EOF
+#!${lib.getExe bash}
+exec ${lib.getExe' bun "bun"} "$entrypoint" "\$@"
+EOF
+    chmod +x "$out/bin/${manifest.binary.name}"
     ${aliasWrappers}
   '';
   meta = basePackage.meta;
