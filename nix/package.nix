@@ -24,15 +24,35 @@ let
     overstoryPiRuntime="$(find "$overstoryNodeModules" -path '*@os-eco/overstory-cli/src/runtimes/pi.ts' | head -n 1)"
 
     if [ -f "$overstoryPiRuntime" ]; then
-      substituteInPlace "$overstoryPiRuntime" \
-        --replace-fail 'import { generatePiGuardExtension } from "./pi-guards.ts";
-' "" \
-        --replace-fail '		// Always deploy Pi guard extension.
+      oldGuardImport=$(cat <<'EOF'
+import { generatePiGuardExtension } from "./pi-guards.ts";
+EOF
+      )
+      oldGuardWrite=$(cat <<'EOF'
+		// Always deploy Pi guard extension.
 		const piExtDir = join(worktreePath, ".pi", "extensions");
 		await mkdir(piExtDir, { recursive: true });
 		await Bun.write(join(piExtDir, "overstory-guard.ts"), generatePiGuardExtension(hooks));
 
-' ""
+EOF
+      )
+      oldDetectReady=$(cat <<'EOF'
+		const hasHeader = paneContent.includes("pi v");
+		const hasStatusBar = /\d+\.\d+%\/\d+k/.test(paneContent);
+EOF
+      )
+      newDetectReady=$(cat <<'EOF'
+		const hasHeader = paneContent.includes("pi v");
+		const isOsEcoReady = paneContent.includes("[OS-ECO:READY]");
+		const hasStatusBar =
+			isOsEcoReady || /\d+(?:\.\d+)?%\/\d+(?:\.\d+)?[kKmM]/.test(paneContent);
+EOF
+      )
+
+      substituteInPlace "$overstoryPiRuntime" \
+        --replace-fail "$oldGuardImport" "" \
+        --replace-fail "$oldGuardWrite" "" \
+        --replace-fail "$oldDetectReady" "$newDetectReady"
     fi
 
     find "$overstoryNodeModules" \
