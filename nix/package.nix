@@ -28,7 +28,11 @@ let
       alias:
       ''
         mkdir -p "${"$" + alias}/bin"
-        ln -s "$out/bin/${alias}" "${"$" + alias}/bin/${alias}"
+        cat > "${"$" + alias}/bin/${alias}" <<EOF
+#!${lib.getExe bash}
+exec "$out/bin/${manifest.binary.name}" "\$@"
+EOF
+        chmod +x "${"$" + alias}/bin/${alias}"
       ''
     )
     aliasOutputs;
@@ -117,7 +121,6 @@ symlinkJoin {
 exec ${lib.getExe' bun "bun"} "$entrypoint" "\$@"
 EOF
     chmod +x "$out/bin/${manifest.binary.name}"
-    ${aliasWrappers}
     ${aliasOutputLinks}
     bashCompletion="$TMPDIR/${manifest.binary.name}.bash"
     fishCompletion="$TMPDIR/${manifest.binary.name}.fish"
