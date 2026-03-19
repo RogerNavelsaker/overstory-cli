@@ -38,6 +38,7 @@
           package = pkgs.callPackage ./nix/package.nix { };
         in {
           default = package;
+          overstory = package;
           ov = package.ov;
         });
 
