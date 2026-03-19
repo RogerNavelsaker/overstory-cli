@@ -1,4 +1,4 @@
-{ bash, bun, bun2nix, lib, makeWrapper, symlinkJoin }:
+{ bash, bun, bun2nix, installShellFiles, lib, makeWrapper, symlinkJoin }:
 
 let
   manifest = builtins.fromJSON (builtins.readFile ./package-manifest.json);
@@ -88,7 +88,10 @@ in
 symlinkJoin {
   name = "${manifest.binary.name}-${manifest.package.version}";
   paths = [ basePackage ];
-  nativeBuildInputs = [ makeWrapper ];
+  nativeBuildInputs = [
+    installShellFiles
+    makeWrapper
+  ];
   postBuild = ''
     rm -rf "$out/bin"
     mkdir -p "$out/bin"
@@ -99,6 +102,16 @@ exec ${lib.getExe' bun "bun"} "$entrypoint" "\$@"
 EOF
     chmod +x "$out/bin/${manifest.binary.name}"
     ${aliasWrappers}
+    bashCompletion="$TMPDIR/${manifest.binary.name}.bash"
+    fishCompletion="$TMPDIR/${manifest.binary.name}.fish"
+    zshCompletion="$TMPDIR/_${manifest.binary.name}"
+    "$out/bin/${manifest.binary.name}" completions bash > "$bashCompletion"
+    "$out/bin/${manifest.binary.name}" completions fish > "$fishCompletion"
+    "$out/bin/${manifest.binary.name}" completions zsh > "$zshCompletion"
+    installShellCompletion --cmd ${manifest.binary.name} \
+      --bash "$bashCompletion" \
+      --fish "$fishCompletion" \
+      --zsh "$zshCompletion"
   '';
   meta = basePackage.meta;
 }
