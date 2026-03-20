@@ -172,6 +172,18 @@ EOF
 	);
 EOF
       )
+      oldKillMissing=$(cat <<'EOF'
+		if (stderr.includes("session not found") || stderr.includes("can't find session")) {
+EOF
+      )
+      newKillMissing=$(cat <<'EOF'
+		if (
+			stderr.includes("session not found") ||
+			stderr.includes("find session") ||
+			stderr.includes("no server running")
+		) {
+EOF
+      )
       substituteInPlace "$overstoryTmux" \
         --replace-fail "$oldTmuxHelpers" "$newTmuxHelpers" \
         --replace-fail "$oldCreateSession" "$newCreateSession" \
@@ -205,6 +217,7 @@ EOF
 	]);' \
         --replace-fail '	const { exitCode, stderr } = await runCommand(["tmux", "kill-session", "-t", name]);' \
                          '	const { exitCode, stderr } = await runProjectTmuxCommand(["kill-session", "-t", name]);' \
+        --replace-fail "$oldKillMissing" "$newKillMissing" \
         --replace-fail '	const { exitCode } = await runCommand(["tmux", "has-session", "-t", name]);' \
                          '	const { exitCode } = await runProjectTmuxCommand(["has-session", "-t", name]);' \
         --replace-fail '	const { exitCode, stderr } = await runCommand(["tmux", "has-session", "-t", name]);' \
