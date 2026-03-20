@@ -4,7 +4,7 @@
     "repo": "overstory-cli",
     "npmName": "@os-eco/overstory-cli",
     "version": "0.9.1",
-    "packageRevision": 2
+    "packageRevision": 3
   },
   "binary": {
     "name": "overstory",

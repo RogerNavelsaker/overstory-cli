@@ -39,8 +39,8 @@ EOF
   overstorySrc = fetchFromGitHub {
     owner = "RogerNavelsaker";
     repo = "overstory";
-    rev = "c5554f8c83ef963708137e2fe5fae9370cd02406";
-    hash = "sha256-vrYI8//o3vNYuPzlE++xg3Eqo30ojfP458OQxDVErxQ=";
+    rev = "aa7cf51d479e34405405c89f3c5f66ec37f7494f";
+    hash = "sha256-uF2bb44bfz1u8j6vsTWpOrxNJpi08YLrZfAsrjfLjp8=";
   };
   basePackage = bun2nix.writeBunApplication {
     pname = manifest.package.repo;
