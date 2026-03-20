@@ -36,55 +36,11 @@ EOF
       ''
     )
     aliasOutputs;
-  overstoryPatch = lib.optionalString (manifest.package.repo == "overstory-cli") ''
-    # Tmux/session behavior now comes from RogerNavelsaker/overstory commit
-    # 62c9cee241adf1a4eaee6b5c1934b02995ef5e58 (upstream PR #119).
-    # Keep only the temporary Pi integration patching here until the remaining
-    # ready-marker and session-gating changes land upstream.
-    overstoryNodeModules="$out/share/${manifest.package.repo}/node_modules"
-    overstoryPiRuntime="$(find "$overstoryNodeModules" -path '*@os-eco/overstory-cli/src/runtimes/pi.ts' | head -n 1)"
-
-    if [ -f "$overstoryPiRuntime" ]; then
-      oldGuardImport=$(cat <<'EOF'
-import { generatePiGuardExtension } from "./pi-guards.ts";
-EOF
-      )
-      oldGuardWrite=$(cat <<'EOF'
-		// Always deploy Pi guard extension.
-		const piExtDir = join(worktreePath, ".pi", "extensions");
-		await mkdir(piExtDir, { recursive: true });
-		await Bun.write(join(piExtDir, "overstory-guard.ts"), generatePiGuardExtension(hooks));
-
-EOF
-      )
-      oldDetectReady=$(cat <<'EOF'
-		const hasHeader = paneContent.includes("pi v");
-		const hasStatusBar = /\d+\.\d+%\/\d+k/.test(paneContent);
-EOF
-      )
-      newDetectReady=$(cat <<'EOF'
-		const hasHeader = paneContent.includes("pi v");
-		const isOsEcoReady = paneContent.includes("[OS-ECO:READY]");
-		const hasStatusBar =
-			isOsEcoReady || /\d+(?:\.\d+)?%\/\d+(?:\.\d+)?[kKmM]/.test(paneContent);
-EOF
-      )
-
-      substituteInPlace "$overstoryPiRuntime" \
-        --replace-fail "$oldGuardImport" "" \
-        --replace-fail "$oldGuardWrite" "" \
-        --replace-fail "$oldDetectReady" "$newDetectReady"
-    fi
-
-    find "$overstoryNodeModules" \
-      \( -path '*src/runtimes/pi-guards.ts' -o -path '*src/runtimes/pi-guards.test.ts' \) \
-      -delete
-  '';
   overstorySrc = fetchFromGitHub {
     owner = "RogerNavelsaker";
     repo = "overstory";
-    rev = "62c9cee241adf1a4eaee6b5c1934b02995ef5e58";
-    hash = "sha256-9D4C5/oPZaB5oFMU9MXrzaEeO4C5dPyjImUratCO45M=";
+    rev = "c5554f8c83ef963708137e2fe5fae9370cd02406";
+    hash = "sha256-vrYI8//o3vNYuPzlE++xg3Eqo30ojfP458OQxDVErxQ=";
   };
   basePackage = bun2nix.writeBunApplication {
     pname = manifest.package.repo;
@@ -99,9 +55,6 @@ EOF
     bunDeps = bun2nix.fetchBunDeps {
       bunNix = ../bun.nix;
     };
-    postInstall = ''
-      ${overstoryPatch}
-    '';
     meta = with lib; {
       description = manifest.meta.description;
       homepage = manifest.meta.homepage;
