@@ -52,6 +52,8 @@ EOF
     startScript = ''
       bunx ${manifest.binary.upstreamName or manifest.binary.name} "$@"
     '';
+    # Keep bun.nix in sync with the pinned overstory source's bun.lock, not this
+    # packaging scaffold's package.json.
     bunDeps = bun2nix.fetchBunDeps {
       bunNix = ../bun.nix;
     };
@@ -78,7 +80,11 @@ symlinkJoin {
   postBuild = ''
     rm -rf "$out/bin"
     mkdir -p "$out/bin"
-    entrypoint="$(find "${basePackage}/share/${manifest.package.repo}/node_modules" -path "*/node_modules/${manifest.package.npmName}/${manifest.binary.entrypoint}" | head -n 1)"
+    entrypoint="${basePackage}/share/${manifest.package.repo}/${manifest.binary.entrypoint}"
+    if [ ! -f "$entrypoint" ]; then
+      echo "missing overstory entrypoint: $entrypoint" >&2
+      exit 1
+    fi
     cat > "$out/bin/${manifest.binary.name}" <<EOF
 #!${lib.getExe bash}
 exec ${lib.getExe' bun "bun"} "$entrypoint" "\$@"

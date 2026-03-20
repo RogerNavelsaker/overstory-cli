@@ -6,7 +6,7 @@
   "scripts": {
     "show-manifest": "bun --eval \"console.log(await Bun.file('nix/package-manifest.json').text())\"",
     "sync:manifest": "bun run scripts/sync-from-npm.ts",
-    "postinstall": "bunx bun2nix -o bun.nix"
+    "sync:bun-deps": "echo 'Regenerate bun.nix from the pinned overstory source bun.lock.'"
   },
   "dependencies": {
     "@os-eco/overstory-cli": "0.9.1"
